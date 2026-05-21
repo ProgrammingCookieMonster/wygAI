@@ -47,6 +47,7 @@
 ||                  OOb"      Ybmmmd'                       ||
 \============================================================/
 
+Project by students Andrei Bors (Torrent) & Nicke Hylander.
 
 Course: Introduction to Applied Artificial Intelligence and Machine Learning (TAM400)
 Academic Institution: University West, Sweden (2025-2026)
@@ -56,7 +57,11 @@ Project Scope & Data Source
 This project utilizes official documentation from the SHV website (https://carli.shv.hv.se/dokument/), which is embedded via RAG (Retrieval-Augmented Generation).
 
 Disclaimer
-SHV reserves the right to update their documentation at any time without notifying the project creators or the AI tool. Consequently, essential information retrieved by this AI should be verified manually. 
+SHV reserves the right to update their documentation at any time without notifying the project creators or the AI tool. Consequently, essential information retrieved by this AI should be verified manually in case its believed that the information may have changed.
 The AI should not be trusted blindly for critical information.
 
+For a tiny itsy-bitsy of personality, wygAI it's a she. The discord bot will impersonate Smurfette, it will give it a friendly vibe on the platform.
 Free for anyone to use.
+
+
+67 lines because 67
