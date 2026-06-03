@@ -1,5 +1,6 @@
 import fitz  # pymupdf
 import chromadb
+import re
 from sentence_transformers import SentenceTransformer
 from pathlib import Path
 
@@ -14,14 +15,35 @@ def load_pdf(path):
         text += page.get_text()
     return text
 
-def split_chunks(text, chunk_size=400, overlap=50):
-    words = text.split()
+def split_chunks(text, chunk_size=800, overlap=200):
+    # Split into sentences using punctuation
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+
     chunks = []
-    for i in range(0, len(words), chunk_size - overlap):
-        chunk = " ".join(words[i:i + chunk_size])
-        if chunk.strip():
-            chunks.append(chunk)
-    return chunks
+    current = ""
+
+    for sentence in sentences:
+        # If adding this sentence keeps us under chunk_size → append
+        if len(current) + len(sentence) < chunk_size:
+            current += " " + sentence
+        else:
+            # Save the current chunk
+            chunks.append(current.strip())
+            # Start a new chunk with this sentence
+            current = sentence
+
+    # Add the last chunk
+    if current.strip():
+        chunks.append(current.strip())
+
+    # Add overlap: each chunk includes the previous one
+    final_chunks = []
+    for i in range(len(chunks)):
+        start = max(0, i - 1)
+        combined = " ".join(chunks[start:i+1])
+        final_chunks.append(combined)
+
+    return final_chunks
 
 def build_database():
     embedder = SentenceTransformer(EMBED_MODEL)
@@ -33,7 +55,7 @@ def build_database():
     except:
         pass
 
-    collection = client.create_collection("union_docs")
+    collection = client.create_collection("union_docs", metadata={"hnsw:space": "cosine"}) # the distance in cosine space becomes way more interpretable for threshold
 
     pdf_files = list(Path(DOCUMENTS_PATH).rglob("*.pdf"))
     print(f"Found {len(pdf_files)} documents")
