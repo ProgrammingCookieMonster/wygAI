@@ -35,7 +35,7 @@ def build_database():
 
     collection = client.create_collection("union_docs")
 
-    pdf_files = list(Path(DOCUMENTS_PATH).glob("*.pdf"))
+    pdf_files = list(Path(DOCUMENTS_PATH).rglob("*.pdf"))
     print(f"Found {len(pdf_files)} documents")
 
     chunk_id = 0
@@ -56,7 +56,7 @@ def build_database():
                 ids=[f"chunk_{chunk_id}"],
                 embeddings=[embedding],
                 documents=[chunk],
-                metadatas=[{"source": pdf_path.name}]
+                metadatas=[{"source": str(pdf_path.relative_to(DOCUMENTS_PATH))}]
             )
             chunk_id += 1
 
