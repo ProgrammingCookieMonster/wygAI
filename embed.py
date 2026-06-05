@@ -15,7 +15,7 @@ def load_pdf(path):
         text += page.get_text()
     return text
 
-def split_chunks(text, chunk_size=800, overlap=200):
+def split_chunks(text, chunk_size=500, overlap=100):
     # Split into sentences using punctuation
     sentences = re.split(r'(?<=[.!?])\s+', text)
 

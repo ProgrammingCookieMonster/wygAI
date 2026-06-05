@@ -5,25 +5,25 @@ from sentence_transformers import SentenceTransformer
 DB_PATH = "./db"
 EMBED_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 LLM_MODEL = "qwen2.5:3b"
-RELEVANCE_THRESHOLD = 0.7  # relevance level in distance [cosinus space]
+RELEVANCE_THRESHOLD = 0.7
 
 embedder = SentenceTransformer(EMBED_MODEL)
 client = chromadb.PersistentClient(path=DB_PATH)
 collection = client.get_collection("union_docs")
 
 SYSTEM_PROMPT = """
-You are an AI assistant at Studentkåren på Högskolan Väst (short for SHV) and your name is Smurfette.
+Du är en AI-assistent för Studentkåren vid Högskolan Väst (SHV) och ditt namn är Smurfette.
 
-STRICT RULES WHICH ALWAYS RULE NO MATTER WHAT:
-1. You can ONLY base your answers on the documentation given to you.
-2. If nothing about the question was found in the documentation, answer ALWAYS with:
-"There is no information about this in my documentation. You can always contact someone at SHV or simply leave your question in the general chat."
-3. NEVER give away names of people, but give instead the position/role of that person.
-4. If the question proves to have no relevance to the documentation or anything to do with the SHV, politely answer something like:
-"This question is out of my scope and I cannot help out with it. Contact SHV or leave a note in the general chat if you think this is a mistake of the AI reasoning."
-5. NEVER create information outside of what you can reason from the documentation.
-6. Keep the answers short and practical.
-7. Keep the language scope in English and Swedish. If the question you receive is in Swedish, answer back in Swedish. If it is in English, answer back in English. If the user uses any other language, answer in English.
+STRIKTA REGLER SOM ALLTID GÄLLER:
+1. Basera ENBART dina svar på dokumenten som ges till dig.
+2. Om frågan inte besvaras av dokumenten, svara ALLTID:
+   "Det finns ingen information om detta i min dokumentation. Kontakta SHV direkt eller ställ frågan i den allmänna chatten."
+3. Nämn ALDRIG namn på personer — använd alltid deras position eller roll.
+4. Om frågan inte har relevans för SHV:s verksamhet, svara:
+   "Den här frågan faller utanför mitt område. Kontakta SHV eller skriv i den allmänna chatten om du tror att detta är ett AI-fel."
+5. Hitta ALDRIG på information som inte finns i dokumenten.
+6. Håll svaren relativ korta och praktiska.
+7. Svara på svenska om frågan är på svenska, på engelska om frågan är på engelska.
 """
 
 def answer_question(question, debug=False):
@@ -31,7 +31,7 @@ def answer_question(question, debug=False):
 
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=3,
+        n_results=5,
         include=["documents", "metadatas", "distances"]
     )
 
@@ -49,9 +49,9 @@ def answer_question(question, debug=False):
             print(doc[:300] + "...")
         print("---\n")
 
-    # relevance filter — reject before hitting LLM
     if best_distance > RELEVANCE_THRESHOLD:
-        return ("Jag kan bara hjälpa med relevanta frågor.")
+        return ("Den här frågan faller utanför mitt område. "
+                "Kontakta SHV eller skriv i den allmänna chatten.")
 
     context_parts = []
     for doc, meta in zip(
@@ -65,9 +65,10 @@ def answer_question(question, debug=False):
         model=LLM_MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": 
+            {"role": "user", "content":
              f"Relevanta dokument:\n{context}\n\nFråga: {question}"}
-        ]
+        ],
+        options={"temperature": 0}
     )
 
     return response.message.content
