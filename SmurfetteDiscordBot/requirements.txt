@@ -1,0 +1,4 @@
+discord.py>=2.4.0
+python-dotenv>=1.0.0
+# requires .env file with the data and the tokens from the discord
+# wont work otherwise
