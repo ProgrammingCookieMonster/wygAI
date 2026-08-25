@@ -17,7 +17,7 @@ VERIFIED_ROLE_ID = int(os.environ["VERIFIED_ROLE_ID"])
 
 # keep logging in case channel stays up
 LOG_CHANNEL_ID = os.environ.get("LOG_CHANNEL_ID")
-LOG_CHANNEL_ID = int(os.environ(LOG_CHANNEL_ID)) if LOG_CHANNEL_ID else None
+LOG_CHANNEL_ID = int(LOG_CHANNEL_ID) if LOG_CHANNEL_ID else None
 
 BANNER_IMAGE_URL = os.environ.get("BANNER_IMAGE_URL")
 
@@ -62,8 +62,8 @@ class SetNameModal(discord.ui.Modal, title="Set your server name!"):
             return # does not attempt role changing if the name failed so far
 
         # removes the forced onboarding role of "unregistered-user" and assigns "Trusted", as the whole interaction passes as a bot check as well
-        unregistered_role = guild.get_role("UNREGISTERED_ROLE_ID")
-        verified_role = guild.get_role("VERIFIED_ROLE_ID")
+        unregistered_role = guild.get_role(UNREGISTERED_ROLE_ID)
+        verified_role = guild.get_role(VERIFIED_ROLE_ID)
         try:
             # acts only if the target doesn't already match the goal
             if unregistered_role and unregistered_role in member.roles:
@@ -71,7 +71,7 @@ class SetNameModal(discord.ui.Modal, title="Set your server name!"):
             if verified_role and verified_role not in member.roles:
                 await member.add_roles(verified_role, reason="User completed server onboarding rename process and earned the Trusted badge.")
         except:
-            log.warning("Missing permissions to swap roles for user/id + " + member.display_name + "/" + member.id)
+            log.warning(f"Missing permissions to swap roles for user/id: {member.display_name}/{member.id}")
 
         # modal response
         await interaction.response.send_message(f"All set -- server nickname changed to **{new_nick}**. Welcome in!", ephemeral=True)
@@ -84,7 +84,7 @@ class SetNameModal(discord.ui.Modal, title="Set your server name!"):
                     description=(f"{member.mention} verified as a trusted user by bypassing the onboarding name change program & set their server nickname to **{new_nick}**"),
                     colour=discord.Color.green(),
                 )
-                log_embed.set_footer(text=f"User Name/ID: {member.id}/{member.display_name}")
+                log_embed.set_footer(text=f"User Name/ID: {member.display_name}/{member.id}")
                 try:
                     await log_channel.send(embed=log_embed)
                 except:
@@ -94,11 +94,12 @@ class SetNameModal(discord.ui.Modal, title="Set your server name!"):
 class WelcomeView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-        # maps to render to the specific button defined before, should stay the same on reset
-        @discord.ui.button(label="Set My Name!", style=discord.ButtonStyle.primary, custom_id=SET_NAME_CUSTOM_ID)
-        async def set_name(self, interaction: discord.Interaction, button: discord.ui.Button):
-            # interaction --> send modal to trigger pop-up
-            await interaction.response.send_modal(SetNameModal())
+
+   # maps to render to the specific button defined before, should stay the same on reset
+    @discord.ui.button(label="Set My Name!", style=discord.ButtonStyle.primary, custom_id=SET_NAME_CUSTOM_ID)
+    async def set_name(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # interaction --> send modal to trigger pop-up
+        await interaction.response.send_modal(SetNameModal())
 
 # fires once on the onboarding process
 @bot.event
@@ -108,7 +109,7 @@ async def on_ready():
 
 # command for posting the card on the channel. only admin can do that, needs the first time post and re-posting in case it goes down
 @bot.command(name="postwelcome")
-@commands.has_permissions(admin=True)
+@commands.has_permissions(administrator=True)
 async def post_welcome(ctx: commands.Context):
     """Admin-only one-off command: post/re-post the onboarding card."""
     channel = bot.get_channel(WELCOME_CHANNEL_ID)
