@@ -19,7 +19,7 @@ VERIFIED_ROLE_ID = int(os.environ["VERIFIED_ROLE_ID"])
 LOG_CHANNEL_ID = os.environ.get("LOG_CHANNEL_ID")
 LOG_CHANNEL_ID = int(LOG_CHANNEL_ID) if LOG_CHANNEL_ID else None
 
-BANNER_IMAGE_URL = os.environ.get("BANNER_IMAGE_URL")
+BANNER_IMAGE_PATH = "assets/welcome.gif" # local path, decided to keep a gif local to ensure it passes on
 
 # button click belongs to the specific button, defined after restarts
 SET_NAME_CUSTOM_ID = "smurfette:set_button_name"
@@ -28,6 +28,7 @@ SET_NAME_CUSTOM_ID = "smurfette:set_button_name"
 # Smurfette needs access to the privileged intent of "members" so it can change their nicknames
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Modal UI pop-up for the name change.
@@ -126,9 +127,12 @@ async def post_welcome(ctx: commands.Context):
     )
 
     # set banner on message
-    if BANNER_IMAGE_URL:
-        embed.set_image(url=BANNER_IMAGE_URL)
-
+    file = None
+    if BANNER_IMAGE_PATH:
+        file = discord.File(BANNER_IMAGE_PATH, filename="welcome.gif")
+        embed.set_image(url="attachment://welcome.gif")
+    if file:
+        await channel.send(embed=embed, file=file, view=WelcomeView())
     # render button
     await channel.send(embed=embed, view=WelcomeView())
     await ctx.send("Posted the onboarding card.", delete_after=5)
